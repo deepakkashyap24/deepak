@@ -1,0 +1,127 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Cloudwatch alarm to send email notification
+Parameters:
+  environment:
+    Description: Name of the environment for this stack
+    Type: String
+    AllowedValues: 
+      - prod
+      - stage 
+      - qa
+  service:
+    Description: Name of the service we want to monitor
+    Type: String
+    Default: alarm
+  product:
+    Type: String
+    Default: ad
+Resources:
+  cpuUtilizationAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: !Sub '${environment}-${product}-${service}-cpu-utilization-app'
+      AlarmDescription: !Sub '${environment}-${product}-${service}-cpu-utilization-app'
+      MetricName: CPUUtilization
+      Namespace: AWS/ECS
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 70
+      AlarmActions:
+        - !ImportValue 
+          'Fn::Sub': '${environment}-${product}-sns-topic'
+      Dimensions:
+        - Name: ClusterName
+          Value: !Sub '${environment}-${product}-app'
+      TreatMissingData: notBreaching
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+  memoryUtilizationAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: !Sub '${environment}-${product}-${service}-memory-utilization-app'
+      AlarmDescription: !Sub '${environment}-${product}-${service}-memory-utilization-app'
+      MetricName: MemoryUtilization
+      Namespace: AWS/ECS
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 30
+      AlarmActions:
+        - !ImportValue 
+          'Fn::Sub': '${environment}-${product}-sns-topic'
+      Dimensions:
+        - Name: ClusterName
+          Value: !Sub '${environment}-${product}-app'
+      TreatMissingData: notBreaching
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+  wpCpuUtilizationAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: !Sub '${environment}-${product}-${service}-cpu-utilization-wordpress-site'
+      AlarmDescription: !Sub '${environment}-${product}-${service}-cpu-utilization-wordpress-site'
+      MetricName: CPUUtilization
+      Namespace: AWS/ECS
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 70
+      AlarmActions:
+        - !ImportValue 
+          'Fn::Sub': '${environment}-${product}-sns-topic'
+      Dimensions:
+        - Name: ClusterName
+          Value: !Sub '${environment}-${product}-wordpress-site'
+      TreatMissingData: notBreaching
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+  wpMemoryUtilizationAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: !Sub '${environment}-${product}-${service}-memory-utilization-worpress-site'
+      AlarmDescription: !Sub '${environment}-${product}-${service}-memory-utilization-wordpress-site'
+      MetricName: MemoryUtilization
+      Namespace: AWS/ECS
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 30
+      AlarmActions:
+        - !ImportValue 
+          'Fn::Sub': '${environment}-${product}-sns-topic'
+      Dimensions:
+        - Name: ClusterName
+          Value: !Sub '${environment}-${product}-wordpress-site'
+      TreatMissingData: notBreaching
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+Outputs:
+  cpuUtilizationAlarmName:
+    Value: !Ref cpuUtilizationAlarm
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-app-cpuUtilization'
+  cpuUtilizationAlarmArn:
+    Value: !GetAtt cpuUtilizationAlarm.Arn
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-app-cpuUtilization-arn'
+  memoryUtilizationAlarmName:
+    Value: !Ref memoryUtilizationAlarm
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-app-memoryUtilization'
+  memoryUtilizationAlarmArn:
+    Value: !GetAtt memoryUtilizationAlarm.Arn
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-app-memoryUtilization-arn'
+  wpCpuUtilizationAlarmName:
+    Value: !Ref wpCpuUtilizationAlarm
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-wordpress-site-cpuUtilization'
+  wpCpuUtilizationAlarmArn:
+    Value: !GetAtt wpCpuUtilizationAlarm.Arn
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-wordpress-site-cpuUtilization-arn'
+  wpMemoryUtilizationAlarmName:
+    Value: !Ref wpMemoryUtilizationAlarm
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-wordpress-site-memoryUtilization'
+  wpMemoryUtilizationAlarmArn:
+    Value: !GetAtt wpMemoryUtilizationAlarm.Arn
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-wordpress-site-memoryUtilization-arn'

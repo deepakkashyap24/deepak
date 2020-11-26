@@ -1,0 +1,256 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Cloudwatch alarm to send email notification
+Parameters:
+  DBInstanceIdentifier:
+    Description: Name of the instance we want to monitor metrics for
+    Type: String
+  environment:
+    Description: Name of the environment for this stack
+    Type: String
+    AllowedValues:
+      - dev
+      - qa
+      - stage
+      - prod
+  service:
+    Description: Name of the service we want to monitor
+    Type: String
+  product:
+    Type: String
+    Default: ad
+Resources:
+  rdsDatabaseConnectionAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: !Sub '${environment}-${product}-${service}-rds-database-connections'
+      AlarmDescription: Alarm for monitoring the number of Database connections
+      Namespace: AWS/RDS
+      MetricName: DatabaseConnections
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      Threshold: 10000
+      AlarmActions:
+        - !ImportValue 
+          'Fn::Sub': '${environment}-${product}-sns-topic'
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Sub '${DBInstanceIdentifier}'
+        - Name: ServiceName
+          Value: !Sub '${service}'
+      TreatMissingData: notBreaching
+  cpuUtilizationAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: !Sub '${environment}-${product}-${service}-cpu-utilization-alarm'
+      AlarmDescription: !Sub '${environment}-${product}-${service}-cpu-utilization-alarm'
+      MetricName: CPUUtilization
+      Namespace: AWS/RDS
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 70
+      AlarmActions:
+        - !ImportValue 
+          'Fn::Sub': '${environment}-${product}-sns-topic'
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Sub '${DBInstanceIdentifier}'
+        - Name: ServiceName
+          Value: !Sub '${service}'
+      TreatMissingData: notBreaching
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+  memoryUtilizationAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: !Sub '${environment}-${product}-${service}-memory-utilization-alarm'
+      AlarmDescription: !Sub '${environment}-${product}-${service}-memory-utilization-alarm'
+      MetricName: MemoryUtilization
+      Namespace: AWS/RDS
+      Statistic: SampleCount
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 70
+      AlarmActions:
+        - !ImportValue 
+          'Fn::Sub': '${environment}-${product}-sns-topic'
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Sub '${DBInstanceIdentifier}'
+        - Name: ServiceName
+          Value: !Sub '${service}'
+      TreatMissingData: notBreaching
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+  rdsFreeStorageAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${environment}-${product}-${service}-freeStorage-alarm'
+      AlarmDescription: !Sub '${environment}-${product}-${service}-freeStorage-alarm'
+      MetricName: FreeStorageSpace
+      Namespace: AWS/RDS
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 21475
+      AlarmActions:
+        - !ImportValue 
+          'Fn::Sub': '${environment}-${product}-sns-topic' 
+      DatapointsToAlarm: 1
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Sub '${DBInstanceIdentifier}'
+        - Name: ServiceName
+          Value: !Sub '${service}'
+      TreatMissingData: notBreaching
+      Unit: Bytes
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+  rdsFreeableMemoryAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub '${environment}-${product}-${service}-freeable-memory-alarm'
+      AlarmDescription: !Sub '${environment}-${product}-${service}-freeable-memory-alarm'
+      MetricName: FreeableMemory
+      Namespace: AWS/RDS
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 10000
+      AlarmActions:
+        - !ImportValue 
+          'Fn::Sub': '${environment}-${product}-sns-topic'
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Sub '${DBInstanceIdentifier}'
+        - Name: ServiceName
+          Value: !Sub '${service}'
+      TreatMissingData: notBreaching
+      ComparisonOperator: LessThanOrEqualToThreshold
+  rdsLoginFailureAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: !Sub '${environment}-${product}-${service}-failure-login-alarm'
+      AlarmDescription: !Sub '${environment}-${product}-${service}-failure-login-alarm'
+      MetricName: RDSLoginFailures
+      Namespace: AWS/RDS
+      Statistic: Average
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      AlarmActions:
+        - !ImportValue 
+          'Fn::Sub': '${environment}-${product}-sns-topic'
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Sub '${DBInstanceIdentifier}'
+        - Name: ServiceName
+          Value: !Sub '${service}'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+  networkTransmitThroughputAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: !Sub '${environment}-${product}-${service}-Network-trasmit-throughput-alarm'
+      AlarmDescription: !Sub '${environment}-${product}-${service}-Network-trasmit-throughput-alarm'
+      MetricName: NetworkTransmitThroughput
+      Namespace: AWS/RDS
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1300
+      AlarmActions:
+        - !ImportValue 
+          'Fn::Sub': '${environment}-${product}-sns-topic'
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Sub '${DBInstanceIdentifier}'
+        - Name: ServiceName
+          Value: !Sub '${service}'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+  networkReceiveThroughputAlarm:
+    Type: 'AWS::CloudWatch::Alarm'
+    Properties:
+      AlarmName: !Sub '${environment}-${product}-${service}-Network-Receive-throughput-alarm'
+      AlarmDescription: !Sub '${environment}-${product}-${service}-Network-Receive-throughput-alarm'
+      MetricName: NetworkReceiveThroughput
+      Namespace: AWS/RDS
+      Statistic: Average
+      Period: 60
+      EvaluationPeriods: 1
+      Threshold: 1300
+      AlarmActions:
+        - !ImportValue 
+          'Fn::Sub': '${environment}-${product}-sns-topic'
+      Dimensions:
+        - Name: DBInstanceIdentifier
+          Value: !Sub '${DBInstanceIdentifier}'
+        - Name: ServiceName
+          Value: !Sub '${service}'
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+Outputs:
+  rdsDatabaseConnectionAlarmName:
+    Value: !Ref rdsDatabaseConnectionAlarm
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-DatabaseConnection'
+  rdsDatabaseConnectionAlarmArn:
+    Value: !GetAtt rdsDatabaseConnectionAlarm.Arn
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-DatabaseConnection-arn'
+  cpuUtilizationAlarmName:
+    Value: !Ref cpuUtilizationAlarm
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-cpuUtilization'
+  cpuUtilizationAlarmArn:
+    Value: !GetAtt cpuUtilizationAlarm.Arn
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-cpuUtilization-arn'
+  memoryUtilizationAlarmName:
+    Value: !Ref memoryUtilizationAlarm
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-memoryUtilization'
+  memoryUtilizationAlarmArn:
+    Value: !GetAtt memoryUtilizationAlarm.Arn
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-memoryUtilization-arn'
+  rdsFreeStorageAlarmName:
+    Value: !Ref rdsFreeStorageAlarm
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-FreeStorage'
+  rdsFreeStorageAlarmArn:
+    Value: !GetAtt rdsFreeStorageAlarm.Arn
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-FreeStorage-arn'
+  rdsFreeableMemoryAlarmName:
+    Value: !Ref rdsFreeableMemoryAlarm
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-FreeableMemory'
+  rdsFreeableMemoryAlarmArn:
+    Value: !GetAtt rdsFreeableMemoryAlarm.Arn
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-FreeableMemory-arn'
+  rdsLoginFailureAlarmName:
+    Value: !Ref rdsLoginFailureAlarm
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-LoginFailure'
+  rdsLoginFailureAlarmArn:
+    Value: !GetAtt rdsLoginFailureAlarm.Arn
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-LoginFailure-arn'
+  networkTransmitThroughputAlarmName:
+    Value: !Ref networkTransmitThroughputAlarm
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-network-transmit-throughput'
+  networkTransmitThroughputAlarmArn:
+    Value: !GetAtt networkTransmitThroughputAlarm.Arn
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-network-transmit-throughput-arn'
+  networkReceiveThroughputAlarmName:
+    Value: !Ref networkReceiveThroughputAlarm
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-network-receive-throughput'
+  networkReceiveThroughputAlarmArn:
+    Value: !GetAtt networkReceiveThroughputAlarm.Arn
+    Export:
+      Name: !Sub '${environment}-${product}-${service}-RDS-network-receive-throughput-arn'
+          
+          
